@@ -1,0 +1,31 @@
+creds:
+  - ['admin', 'secret'] # default one goes first
+  - ['admin', '12345']
+
+onvif:
+  - addr: " 192.168.0.128" # leading spaces because of a bug in YAML parser in Jsonnet
+    id: fy
+    name: Front yard
+    desc: Front yard and street overview
+    rec: motion
+  - addr: ' 192.168.0.125'
+    id: attic
+    name: Attic
+    rec: none
+  - addr: ' 192.168.0.111'
+    id: porch
+    name: Porch
+    desc: Front yard and porch
+    cred: 1 # 0-based index of credentials pair
+    rec: motion
+
+rtsp:
+  - url: "rtsp://admin:54321@192.168.32.121"
+    id: s1e3
+    
+app:
+  metrics: true
+  rtspsrv: true
+  webrtc: true
+  wamp: false
+  websrv: true
