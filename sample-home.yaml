@@ -1,28 +1,47 @@
 creds:
   - ['admin', 'secret'] # default one goes first
   - ['admin', '12345']
+  - ['admin', 'secret']
 
 onvif:
-  - addr: " 192.168.0.128" # leading spaces because of a bug in YAML parser in Jsonnet
+  - addr: "192.168.0.128"
     id: fy
     name: Front yard
     desc: Front yard and street overview
     rec: motion
-  - addr: ' 192.168.0.125'
+    profile: Profile_1
+    substreams:
+      - profile: Profile_2
+        suffix: sub
+        rec: none
+  - addr: '192.168.0.125'
     id: attic
     name: Attic
     rec: none
-  - addr: ' 192.168.0.111'
+  - addr: '192.168.0.111'
     id: porch
     name: Porch
     desc: Front yard and porch
     cred: 1 # 0-based index of credentials pair
-    rec: motion
+    rec: none
+    substreams:
+      - profile: Profile_2
+        suffix: sub
+        rec: motion
 
 rtsp:
-  - url: "rtsp://admin:54321@192.168.32.121"
+  - url: rtsp://admin:12345@192.168.32.121
+    cred: 2
     id: s1e3
-    
+    rec: permanent
+    substreams:
+      - url: rtsp://192.168.32.121/Streaming/Channels/102
+        suffix: main
+        rec: permanent
+      - url: rtsp://192.168.32.121/Streaming/Channels/102
+        suffix: sub
+        rec: none
+
 app:
   metrics: true
   rtspsrv: true

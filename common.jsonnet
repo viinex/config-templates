@@ -49,9 +49,10 @@ local common = {
                else null
        },
 
-  local cleanupOrig(o) = o + { __orig: null }, //std.objectRemoveKey(o, "__orig"),
+  local cleanupOrig(o) = std.prune (o + { __orig: null }), //std.objectRemoveKey(o, "__orig"), // <- absent in 0.20, crashes in 0.21
   
   mk_cam_name: function (clusterId, camId) "cam_" + clusterId + "_" + camId,
+  mk_cam_name_sub: function (clusterId, camId, suffix) "cam_" + clusterId + "_" + camId + "_" + suffix,
   
   mk_rtsp: function (name, url) {
     type: "rtsp",
@@ -148,12 +149,19 @@ local common = {
 
   build_viinex_config: function (cid, app) {
     local mediaSources = app.sources,
+    local mediaSourcesMain = std.filter(function (s) s.__orig.substreamOf == null, mediaSources),
     local storages = if app.record != null then [common.mk_storage(cid+"_1")] else [],
     local recctls = if app.record != null then [common.mk_recctl(s.__orig.id, 5, 5) for s in app.record.motion],
     local rules = if app.record != null then [common.mk_rule_motion(s.__orig.id) for s in app.record.motion],
     local linksRecctlRule = if app.record != null
                             then [[recctls[i].name, rules[i].name, common.mk_cam_name(cid, app.record.motion[i].__orig.id)]
-                                  for i in std.range(0, std.length(app.record.motion)-1)]
+                                  for i in std.range(0, std.length(app.record.motion)-1) if !("recEventSource" in app.record.motion[i].__orig)]
+                                 +[[recctls[i].name, rules[i].name]
+                                   for i in std.range(0, std.length(app.record.motion)-1) if "recEventSource" in app.record.motion[i].__orig]
+                                 +[[recctls[i].name, app.record.motion[i].__orig.id]
+                                   for i in std.range(0, std.length(app.record.motion)-1) if "recEventSource" in app.record.motion[i].__orig]
+                                 +[[rules[i].name, app.record.motion[i].__orig.recEventSource]
+                                   for i in std.range(0, std.length(app.record.motion)-1) if "recEventSource" in app.record.motion[i].__orig]
                             else [],
     local linksRecPermanent = if app.record != null
                               then [[common.namesOf(storages), common.namesOf(app.record.permanent)]]
@@ -171,7 +179,7 @@ local common = {
     local apiPublishers = websrvs + wamps,
     local apiProviders = mediaSources + storages + webrtcs + metrics + databases,
     local metricsProviders = mediaSources + storages,
-    local eventProducers = mediaSources + storages,
+    local eventProducers = mediaSourcesMain + storages,
     
     objects: std.map(cleanupOrig, mediaSources + storages + publishers + metrics + recctls + rules + databases),
     links: [
