@@ -87,6 +87,30 @@ local common = {
     filter: ["MotionAlarm"]
   },
 
+  // renderer for video analytics
+  mk_renderer: function (name, refreshRate) {
+    type: "renderer",
+    name: "rend_" + name,
+    share: true,
+    refresh_rate: refreshRate,
+    layout: {
+      size: [0, 0],
+      viewports: [
+        {
+          input: 0,
+          dst: [0,0,1,1]
+        }
+      ]
+    },
+    encoder: {
+      type: "cpu",
+      quality: "small_size",
+      profile: "baseline",
+      preset: "ultrafast",
+      dynamic: true
+    }
+  },
+  
   mk_webserver: function (name) {
     type: "webserver",
     name: "web_" + name,
@@ -135,6 +159,12 @@ local common = {
     },
   },
 
+  mk_replsrc: function (name, sinkEndpoint, auth) {
+    type: "replsrc",
+    name: "replsrc_" + name,
+    sink: sinkEndpoint
+  } + if auth != null then { key: auth[0], secret: auth[1] } else {},
+
   namesOf: function (objects) std.map(function(x) x.name, objects),
 
   default_app: function () {
@@ -151,8 +181,9 @@ local common = {
     local mediaSources = app.sources,
     local mediaSourcesMain = std.filter(function (s) s.__orig.substreamOf == null, mediaSources),
     local storages = if app.record != null then [common.mk_storage(cid+"_1")] else [],
-    local recctls = if app.record != null then [common.mk_recctl(s.__orig.id, 5, 5) for s in app.record.motion],
-    local rules = if app.record != null then [common.mk_rule_motion(s.__orig.id) for s in app.record.motion],
+    local replsrcs = if app.repl != null && app.record != null then [common.mk_replsrc(cid+"_1", app.repl.sink, [cid, app.repl.secret])] else [],
+    local recctls = if app.record != null then [common.mk_recctl(s.__orig.id, 5, 5) for s in app.record.motion] else [],
+    local rules = if app.record != null then [common.mk_rule_motion(s.__orig.id) for s in app.record.motion] else [],
     local linksRecctlRule = if app.record != null
                             then [[recctls[i].name, rules[i].name, common.mk_cam_name(cid, app.record.motion[i].__orig.id)]
                                   for i in std.range(0, std.length(app.record.motion)-1) if !("recEventSource" in app.record.motion[i].__orig)]
@@ -166,6 +197,7 @@ local common = {
     local linksRecPermanent = if app.record != null
                               then [[common.namesOf(storages), common.namesOf(app.record.permanent)]]
                               else [],
+    local linksStoragesReplsrcs = [[common.namesOf(storages), common.namesOf(replsrcs)]],
     local webrtcs = if app.webrtc then [common.mk_webrtc(cid+"_0")] else [],
     local rtspsrvs = if app.rtspsrv then [common.mk_rtspsrv(cid+"_0", 1554)] else [],
     local websrvs = if app.websrv then [common.mk_webserver(cid+"_0")] else [],
@@ -181,7 +213,7 @@ local common = {
     local metricsProviders = mediaSources + storages,
     local eventProducers = mediaSourcesMain + storages,
     
-    objects: std.map(cleanupOrig, mediaSources + storages + publishers + metrics + recctls + rules + databases),
+    objects: std.map(cleanupOrig, mediaSources + storages + publishers + metrics + recctls + replsrcs + rules + databases),
     links: [
       [common.namesOf(mediaSources), common.namesOf(mediaPublishers)],
       [common.namesOf(mediaPublishers), common.namesOf(storages)],
@@ -189,7 +221,7 @@ local common = {
       [common.namesOf(metrics), common.namesOf(metricsProviders)],
       [common.namesOf(recctls), common.namesOf(storages)],
       [common.namesOf(databases), common.namesOf(eventProducers)]
-    ] + linksRecctlRule + linksRecPermanent
+    ] + linksRecctlRule + linksRecPermanent + linksStoragesReplsrcs
   },
 
 };

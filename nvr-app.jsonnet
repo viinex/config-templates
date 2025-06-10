@@ -59,11 +59,25 @@
     local recPermanent = std.filter(function (s) "rec" in s.__orig && s.__orig.rec == "permanent", self.sources),
     local recMotion = std.filter(function (s) "rec" in s.__orig && s.__orig.rec == "motion", self.sources),
     record: if std.all(std.map(function(s) s.__orig.rec == "none", self.sources)) then null else { motion: recMotion, permanent: recPermanent },
-    webrtc: true,
-    rtspsrv: false,
-    websrv: true,
-    wamp: false,
-    metrics: true,
-    events: "sqlite"
+
+    appDefault: {
+      webrtc: true,
+      rtspsrv: true,
+      websrv: true,
+      wamp: false,
+      metrics: true,
+      events: "sqlite",
+      repl: null,
+    },
+
+    local confApp = self.appDefault + if "app" in conf then conf.app else {},
+
+    webrtc: confApp.webrtc,
+    rtspsrv: confApp.rtspsrv,
+    websrv: confApp.websrv,
+    wamp: confApp.wamp,
+    metrics: confApp.metrics,
+    events: confApp.events,
+    repl: confApp.repl,
   }
 }

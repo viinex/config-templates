@@ -48,3 +48,6 @@ app:
   webrtc: true
   wamp: false
   websrv: true
+  repl:
+    sink: http://localhost:8881/v1/svc/replsink1
+    secret: 'secret123'
