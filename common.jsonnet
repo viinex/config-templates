@@ -49,7 +49,7 @@ local common = {
                else null
        },
 
-  local cleanupOrig(o) = std.prune (o + { __orig: null }), //std.objectRemoveKey(o, "__orig"), // <- absent in 0.20, crashes in 0.21
+  local cleanupOrig(o) = o, //std.prune (o + { __orig: null }), //std.objectRemoveKey(o, "__orig"), // <- absent in 0.20, crashes in 0.21
   
   mk_cam_name: function (clusterId, camId) "cam_" + clusterId + "_" + camId,
   mk_cam_name_sub: function (clusterId, camId, suffix) "cam_" + clusterId + "_" + camId + "_" + suffix,
@@ -88,9 +88,10 @@ local common = {
   },
 
   // renderer for video analytics
-  mk_renderer: function (name, refreshRate) {
+  mk_renderer_name: function (cid, name) "rend_" + cid + "_" + name,
+  mk_renderer: function (cid, name, refreshRate) {
     type: "renderer",
-    name: "rend_" + name,
+    name: common.mk_renderer_name(cid, name),
     share: true,
     refresh_rate: refreshRate,
     layout: {
@@ -198,6 +199,28 @@ local common = {
                               then [[common.namesOf(storages), common.namesOf(app.record.permanent)]]
                               else [],
     local linksStoragesReplsrcs = [[common.namesOf(storages), common.namesOf(replsrcs)]],
+
+    local srcProc = std.filter(function (s) "proc" in s.__orig && s.__orig.proc != null, mediaSources),
+    local procRefreshRate = if ("proc" in app) && ("fps" in app.proc) then app.proc.fps else 5,
+    local procRenderers = [common.mk_renderer (cid, s.__orig.id, procRefreshRate) for s  in srcProc],
+    local procWorkers = if "mk_proc_worker" in app
+                        then [app.mk_proc_worker(s.__orig.id,
+                                                 common.mk_renderer_name(cid, s.__orig.id),
+                                                 s.__orig.proc,
+                                                 s.__orig)
+                              for s in srcProc]
+                        else null,
+    local procHandlers = if "mk_proc_handler" in app
+                         then [app.mk_proc_handler(s.__orig.id,
+                                                   app.mk_proc_worker_name(cid, s.__orig.id),
+                                                   s.__orig.proc,
+                                                   s.__orig)
+                               for s in srcProc]
+                         else null,
+    local linksProc = [ [[srcProc[i].camName, procRenderers[i].name],
+                         [procWorkers[i].name, procHandlers[i].name]]
+                        for i in std.range(0, std.length(srcProc)-1) ],
+    
     local webrtcs = if app.webrtc then [common.mk_webrtc(cid+"_0")] else [],
     local rtspsrvs = if app.rtspsrv then [common.mk_rtspsrv(cid+"_0", 1554)] else [],
     local websrvs = if app.websrv then [common.mk_webserver(cid+"_0")] else [],
@@ -210,17 +233,18 @@ local common = {
     local mediaPublishers = webrtcs + rtspsrvs + websrvs,
     local apiPublishers = websrvs + wamps,
     local apiProviders = mediaSources + storages + webrtcs + metrics + databases,
-    local metricsProviders = mediaSources + storages,
-    local eventProducers = mediaSourcesMain + storages,
+    local metricsProviders = mediaSources + storages + procRenderers,
+    local eventProducers = mediaSourcesMain + storages + procHandlers,
     
-    objects: std.map(cleanupOrig, mediaSources + storages + publishers + metrics + recctls + replsrcs + rules + databases),
+    objects: mediaSources + storages + publishers + metrics + recctls + replsrcs + rules + databases +
+             procRenderers + procWorkers + procHandlers,
     links: [
       [common.namesOf(mediaSources), common.namesOf(mediaPublishers)],
       [common.namesOf(mediaPublishers), common.namesOf(storages)],
       [common.namesOf(apiPublishers), common.namesOf(apiProviders)],
       [common.namesOf(metrics), common.namesOf(metricsProviders)],
       [common.namesOf(recctls), common.namesOf(storages)],
-      [common.namesOf(databases), common.namesOf(eventProducers)]
+      [common.namesOf(databases), common.namesOf(eventProducers)],
     ] + linksRecctlRule + linksRecPermanent + linksStoragesReplsrcs
   },
 

@@ -8,6 +8,7 @@ onvif:
     id: fy
     name: Front yard
     desc: Front yard and street overview
+    location: 49.84406997764904, 24.02648398409157
     rec: motion
     profile: Profile_1
     substreams:
@@ -18,6 +19,8 @@ onvif:
     id: attic
     name: Attic
     rec: none
+    proc:
+      - alpr-vit
   - addr: '192.168.0.111'
     id: porch
     name: Porch
@@ -34,15 +37,18 @@ rtsp:
     cred: 2
     id: s1e3
     rec: permanent
+    location: 49.84406997764904, 24.02648398409157
     substreams:
       - url: rtsp://192.168.32.121/Streaming/Channels/102
         suffix: main
         rec: permanent
+        proc: [alpr-vit]
       - url: rtsp://192.168.32.121/Streaming/Channels/102
         suffix: sub
         rec: none
 
 app:
+  type: alprBox
   metrics: true
   rtspsrv: true
   webrtc: true
@@ -51,3 +57,6 @@ app:
   repl:
     sink: http://localhost:8881/v1/svc/replsink1
     secret: 'secret123'
+  dnnDevices: cpu
+  alprSettings: kz
+  rtmsEndpoint: http://localhost:8882/nonexistent

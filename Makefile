@@ -10,4 +10,4 @@ clean:
 	rm -rf ${JSONS}
 
 $(JSONS): %.json: %.yaml $(JSONNETS)
-	jsonnet --ext-str CID=${CID} --ext-str-file confYaml=$< nvr-main.jsonnet --ext-str OSName=${OSName} -o $@
+	jsonnet --ext-str CID=${CID} --ext-str-file confYaml=$< main.jsonnet --ext-str OSName=${OSName} -o $@
