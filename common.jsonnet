@@ -74,16 +74,16 @@ local common = {
     transport: ["udp"],
   },
 
-  mk_recctl: function(name, prerecord, postrecord) {
+  mk_recctl: function(cid, name, prerecord, postrecord) {
     type: "recctl",
-    name: "recctl_" + name,
+    name: "recctl_" + cid + "_" + name,
     prerecord: prerecord,
     postrecord: postrecord
   },
 
-  mk_rule_motion: function(name) {
+  mk_rule_motion: function(cid, name) {
     type: "rule",
-    name: "rule_" + name,
+    name: "rule_" + cid + "_" + name,
     filter: ["MotionAlarm"]
   },
 
@@ -183,14 +183,14 @@ local common = {
     local mediaSourcesMain = std.filter(function (s) s.__orig.substreamOf == null, mediaSources),
     local storages = if app.record != null then [common.mk_storage(cid+"_1")] else [],
     local replsrcs = if app.repl != null && app.record != null then [common.mk_replsrc(cid+"_1", app.repl.sink, [cid, app.repl.secret])] else [],
-    local recctls = if app.record != null then [common.mk_recctl(s.__orig.id, 5, 5) for s in app.record.motion] else [],
-    local rules = if app.record != null then [common.mk_rule_motion(s.__orig.id) for s in app.record.motion] else [],
+    local recctls = if app.record != null then [common.mk_recctl(cid, s.__orig.id, 5, 5) for s in app.record.motion] else [],
+    local rules = if app.record != null then [common.mk_rule_motion(cid, s.__orig.id) for s in app.record.motion] else [],
     local linksRecctlRule = if app.record != null
                             then [[recctls[i].name, rules[i].name, common.mk_cam_name(cid, app.record.motion[i].__orig.id)]
                                   for i in std.range(0, std.length(app.record.motion)-1) if !("recEventSource" in app.record.motion[i].__orig)]
                                  +[[recctls[i].name, rules[i].name]
                                    for i in std.range(0, std.length(app.record.motion)-1) if "recEventSource" in app.record.motion[i].__orig]
-                                 +[[recctls[i].name, app.record.motion[i].__orig.id]
+                                 +[[recctls[i].name, app.record.motion[i].__orig.camName]
                                    for i in std.range(0, std.length(app.record.motion)-1) if "recEventSource" in app.record.motion[i].__orig]
                                  +[[rules[i].name, app.record.motion[i].__orig.recEventSource]
                                    for i in std.range(0, std.length(app.record.motion)-1) if "recEventSource" in app.record.motion[i].__orig]
@@ -209,20 +209,20 @@ local common = {
                                                  s.__orig.proc,
                                                  s.__orig)
                               for s in srcProc]
-                        else null,
+                        else [],
     local procHandlers = if "mk_proc_handler" in app
                          then [app.mk_proc_handler(s.__orig.id,
                                                    app.mk_proc_worker_name(cid, s.__orig.id),
                                                    s.__orig.proc,
                                                    s.__orig)
                                for s in srcProc]
-                         else null,
+                         else [],
     local linksProc = [ [[srcProc[i].camName, procRenderers[i].name],
                          [procWorkers[i].name, procHandlers[i].name]]
                         for i in std.range(0, std.length(srcProc)-1) ],
     
     local webrtcs = if app.webrtc then [common.mk_webrtc(cid+"_0")] else [],
-    local rtspsrvs = if app.rtspsrv then [common.mk_rtspsrv(cid+"_0", 1554)] else [],
+    local rtspsrvs = if app.rtspsrv then [common.mk_rtspsrv(cid+"_0", constants.rtspsrvPort)] else [],
     local websrvs = if app.websrv then [common.mk_webserver(cid+"_0")] else [],
     local metrics = if app.metrics then [common.mk_metrics(cid)] else [],
     local databases = if app.events == "sqlite"

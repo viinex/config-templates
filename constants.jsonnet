@@ -7,7 +7,9 @@ local constants = {
     certificate: self.path + "certificate.pem"
   },
 
-  storageRoot: if constants.isWindows then "c:/viinexvideo" else "/vnxdata"
+  storageRoot: if constants.isWindows then "c:/viinexvideo" else "/vnxdata",
+
+  rtspsrvPort: 554,
 };
 
 constants

@@ -31,7 +31,7 @@
         rec: if "rec" in ss then ss.rec else "none",
         substreamOf: c.id,
         id: c.id + "_" + ss.suffix,
-        recEventSource: origCamName,
+        recEventSource: common.mk_cam_name(cid, c.id),
         camName: common.mk_cam_name_sub(cid, c.id, ss.suffix),
         meta: meta,
       } + (if "proc" in ss then { proc: ss.proc } else { proc: null }),
