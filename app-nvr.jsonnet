@@ -10,12 +10,12 @@
 
   local dynamic (c) = !("rec" in c) || (c.rec == "none"),
 
-  local camOrigMeta (cid, c) =
+  local camOrigMeta (cid, confApp, c) =
     local meta = metaNameDesc(c);
     {
       __orig:: c + {
         substreamOf: null,
-        camName: common.mk_cam_name(cid, c.id),
+        camName: common.mk_cam_name(cid, confApp, c.id),
         meta: meta,
       },
       meta: meta,
@@ -23,16 +23,16 @@
     },
 
   
-  local camOrigMetaSub (cid, c, ss) =
-    local origCamName = common.mk_cam_name(cid, c.id);
+  local camOrigMetaSub (cid, confApp, c, ss) =
+    local origCamName = common.mk_cam_name(cid, confApp, c.id);
     local meta = metaNameDesc(c) + { origin: origCamName, stream: ss.suffix };
     {
       __orig:: c + {
         rec: if "rec" in ss then ss.rec else "none",
         substreamOf: c.id,
         id: c.id + "_" + ss.suffix,
-        recEventSource: common.mk_cam_name(cid, c.id),
-        camName: common.mk_cam_name_sub(cid, c.id, ss.suffix),
+        recEventSource: common.mk_cam_name(cid, confApp, c.id),
+        camName: common.mk_cam_name_sub(cid, confApp, c.id, ss.suffix),
         meta: meta,
       } + (if "proc" in ss then { proc: ss.proc } else { proc: null }),
       meta: meta,
@@ -41,35 +41,35 @@
 
   local substreams (c) = if "substreams" in c then c["substreams"] else [],
   
-  make_app (cid, conf): {
-    local onvifSet = if "onvif" in conf then conf.onvif else [],
-    local rtspSet = if "rtsp" in conf then conf.rtsp else [],
+  make_app (cid, appDef): {
+    local onvifSet = if "onvif" in appDef then appDef.onvif else [],
+    local rtspSet = if "rtsp" in appDef then appDef.rtsp else [],
 
     local mk_onvif_substreams(c) =
-      [common.mk_onvif(common.mk_cam_name_sub(cid, c.id, ss.suffix),
+      [common.mk_onvif(common.mk_cam_name_sub(cid, confApp, c.id, ss.suffix),
                        c.addr,
-                       conf.creds[if "cred" in c then c["cred"] else 0],
+                       appDef.creds[if "cred" in c then c["cred"] else 0],
                        ss.profile)
        + { enable: ['video', 'audio'] }
-       + camOrigMetaSub(cid, c, ss)
+       + camOrigMetaSub(cid, confApp, c, ss)
        for ss in substreams(c)],
     local mk_rtsp_substreams(c) =
-      [common.mk_rtsp(common.mk_cam_name_sub(cid, c.id, ss.suffix),
+      [common.mk_rtsp(common.mk_cam_name_sub(cid, confApp, c.id, ss.suffix),
                       ss.url)
-       + (if "cred" in c then {auth: conf.creds[c.cred]} else {})
+       + (if "cred" in c then {auth: appDef.creds[c.cred]} else {})
        + { enable: ['video', 'audio'] }
-       + camOrigMetaSub(cid, c, ss)
+       + camOrigMetaSub(cid, confApp, c, ss)
        for ss in substreams(c)],
 
     local srcOnvif =
-      std.map(function(c) common.mk_onvif(common.mk_cam_name(cid, c.id),
+      std.map(function(c) common.mk_onvif(common.mk_cam_name(cid, confApp, c.id),
                                           c.addr,
-                                          conf.creds[if "cred" in c then c["cred"] else 0],
-                                          if "profile" in c then c.profile else null) + camOrigMeta(cid, c),
+                                          appDef.creds[if "cred" in c then c["cred"] else 0],
+                                          if "profile" in c then c.profile else null) + camOrigMeta(cid, confApp, c),
               onvifSet),
     local srcRtsp =
-      std.map(function(c) common.mk_rtsp(common.mk_cam_name(cid, c.id), c.url) +
-              (if "cred" in c then {auth: conf.creds[c.cred]} else {}) + camOrigMeta(cid, c),
+      std.map(function(c) common.mk_rtsp(common.mk_cam_name(cid, confApp, c.id), c.url) +
+              (if "cred" in c then {auth: appDef.creds[c.cred]} else {}) + camOrigMeta(cid, confApp, c),
               rtspSet),
     local srcRtspSubstreams = std.flattenArrays(std.map(mk_rtsp_substreams, rtspSet)),
     local srcOnvifSubstreams = std.flattenArrays(std.map(mk_onvif_substreams, onvifSet)),
@@ -82,13 +82,15 @@
       webrtc: true,
       rtspsrv: true,
       websrv: true,
-      wamp: false,
+      wamp: true,
       metrics: true,
       events: "sqlite",
       repl: null,
+
+      preserveSourceIds: false,
     },
 
-    local confApp = self.appDefault + if "app" in conf then conf.app else {},
+    local confApp = self.appDefault + if "app" in appDef then appDef.app else {},
 
     webrtc: confApp.webrtc,
     rtspsrv: confApp.rtspsrv,
@@ -97,5 +99,6 @@
     metrics: confApp.metrics,
     events: confApp.events,
     repl: confApp.repl,
+    preserveSourceIds: confApp.preserveSourceIds,
   }
 }

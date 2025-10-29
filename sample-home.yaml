@@ -56,7 +56,8 @@ app:
   websrv: true
   repl:
     sink: http://localhost:8881/v1/svc/replsink1
-    secret: 'secret123'
+    auth: ["agentA", "foobarsecret42"]
   dnnDevices: cpu
   alprSettings: kz
   rtmsEndpoint: http://localhost:8882/nonexistent
+  preserveSourceIds: true

@@ -51,8 +51,11 @@ local common = {
 
   local cleanupOrig(o) = o, //std.prune (o + { __orig: null }), //std.objectRemoveKey(o, "__orig"), // <- absent in 0.20, crashes in 0.21
   
-  mk_cam_name: function (clusterId, camId) "cam_" + clusterId + "_" + camId,
-  mk_cam_name_sub: function (clusterId, camId, suffix) "cam_" + clusterId + "_" + camId + "_" + suffix,
+  mk_cam_name: function (clusterId, app, camId)
+    if ("preserveSourceIds" in app) && app["preserveSourceIds"]
+    then camId
+    else "cam_" + clusterId + "_" + camId,
+  mk_cam_name_sub: function (clusterId, app, camId, suffix) common.mk_cam_name(clusterId, app, camId) + "_" + suffix,
   
   mk_rtsp: function (name, url) {
     type: "rtsp",
@@ -202,7 +205,7 @@ local common = {
     local recctls = if app.record != null then [common.mk_recctl(cid, s.__orig.id, 5, 5) for s in app.record.motion] else [],
     local rules = if app.record != null then [common.mk_rule_motion(cid, s.__orig.id) for s in app.record.motion] else [],
     local linksRecctlRule = if app.record != null
-                            then [[recctls[i].name, rules[i].name, common.mk_cam_name(cid, app.record.motion[i].__orig.id)]
+                            then [[recctls[i].name, rules[i].name, common.mk_cam_name(cid, app, app.record.motion[i].__orig.id)]
                                   for i in std.range(0, std.length(app.record.motion)-1) if !("recEventSource" in app.record.motion[i].__orig)]
                                  +[[recctls[i].name, rules[i].name]
                                    for i in std.range(0, std.length(app.record.motion)-1) if "recEventSource" in app.record.motion[i].__orig]
