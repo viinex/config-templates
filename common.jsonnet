@@ -60,6 +60,7 @@ local common = {
     local urlparsed = parseRtspUrl(url),
     url: urlparsed.url,
     auth: urlparsed.auth,
+    rtpstats: true,
     transport: ["tcp"]
   },
 
@@ -129,7 +130,7 @@ local common = {
     type: "storage",
     name: "stor_" + name,
     folder: constants.storageRoot + "/" + self.name,
-    filesize: 16,
+    filesize: 4,
     limits: {
       keep_free_percents: 20
     }
@@ -166,6 +167,21 @@ local common = {
     sink: sinkEndpoint
   } + if auth != null then { key: auth[0], secret: auth[1] } else {},
 
+  mk_wamp_client: function (clusterId, name) {
+    type: "wamp",
+    name: "wamp_" + name,
+    realm: "$(env.REALM)",
+    auth: {
+      method: "cryptosign",
+      role: "$(env.AUTHID)",
+      secret: "$(env.PRIVATE_KEY)"
+    },
+    url: "$(env.URL)",
+    app: "com.viinex.api",
+    prefix: clusterId,
+    clusters: false
+  },
+
   namesOf: function (objects) std.map(function(x) x.name, objects),
 
   default_app: function () {
@@ -182,7 +198,7 @@ local common = {
     local mediaSources = app.sources,
     local mediaSourcesMain = std.filter(function (s) s.__orig.substreamOf == null, mediaSources),
     local storages = if app.record != null then [common.mk_storage(cid+"_1")] else [],
-    local replsrcs = if app.repl != null && app.record != null then [common.mk_replsrc(cid+"_1", app.repl.sink, [cid, app.repl.secret])] else [],
+    local replsrcs = if app.repl != null && app.record != null then [common.mk_replsrc(cid+"_1", app.repl.sink, app.repl.auth)] else [],
     local recctls = if app.record != null then [common.mk_recctl(cid, s.__orig.id, 5, 5) for s in app.record.motion] else [],
     local rules = if app.record != null then [common.mk_rule_motion(cid, s.__orig.id) for s in app.record.motion] else [],
     local linksRecctlRule = if app.record != null
@@ -203,6 +219,7 @@ local common = {
     local srcProc = std.filter(function (s) "proc" in s.__orig && s.__orig.proc != null, mediaSources),
     local procRefreshRate = if ("proc" in app) && ("fps" in app.proc) then app.proc.fps else 5,
     local procRenderers = [common.mk_renderer (cid, s.__orig.id, procRefreshRate) for s  in srcProc],
+    local linksProcRenderers = [[common.mk_renderer_name (cid, s.__orig.id), s.__orig.camName] for s in srcProc],
     local procWorkers = if "mk_proc_worker" in app
                         then [app.mk_proc_worker(s.__orig.id,
                                                  common.mk_renderer_name(cid, s.__orig.id),
@@ -217,9 +234,9 @@ local common = {
                                                    s.__orig)
                                for s in srcProc]
                          else [],
-    local linksProc = [ [[srcProc[i].camName, procRenderers[i].name],
-                         [procWorkers[i].name, procHandlers[i].name]]
+    local linksProc = [ [procWorkers[i].name, procHandlers[i].name]
                         for i in std.range(0, std.length(srcProc)-1) ],
+    local linksProcHandlers = [[common.namesOf(storages), common.namesOf(procHandlers)]],
     
     local webrtcs = if app.webrtc then [common.mk_webrtc(cid+"_0")] else [],
     local rtspsrvs = if app.rtspsrv then [common.mk_rtspsrv(cid+"_0", constants.rtspsrvPort)] else [],
@@ -228,13 +245,13 @@ local common = {
     local databases = if app.events == "sqlite"
                       then [common.mk_db_sqlite(cid+"_1")]
                       else [],
-    local wamps = [],
+    local wamps = if app.wamp then [common.mk_wamp_client(cid, cid + "_0")] else [],
     local publishers = webrtcs + rtspsrvs + websrvs + wamps,
     local mediaPublishers = webrtcs + rtspsrvs + websrvs,
     local apiPublishers = websrvs + wamps,
     local apiProviders = mediaSources + storages + webrtcs + metrics + databases,
-    local metricsProviders = mediaSources + storages + procRenderers,
-    local eventProducers = mediaSourcesMain + storages + procHandlers,
+    local metricsProviders = mediaSources + storages + procRenderers + databases + webrtcs + rtspsrvs + websrvs,
+    local eventProducers = mediaSourcesMain + storages + procWorkers + procHandlers,
     
     objects: mediaSources + storages + publishers + metrics + recctls + replsrcs + rules + databases +
              procRenderers + procWorkers + procHandlers,
@@ -245,7 +262,7 @@ local common = {
       [common.namesOf(metrics), common.namesOf(metricsProviders)],
       [common.namesOf(recctls), common.namesOf(storages)],
       [common.namesOf(databases), common.namesOf(eventProducers)],
-    ] + linksRecctlRule + linksRecPermanent + linksStoragesReplsrcs
+    ] + linksRecctlRule + linksRecPermanent + linksStoragesReplsrcs + linksProcRenderers + linksProc + linksProcHandlers
   },
 
 };
