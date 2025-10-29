@@ -8,7 +8,7 @@
     (if "address" in c then { address: c.address } else {}) +
     (if "serial_number" in c then { serial_number: c.serial_number } else {}),
 
-  local dynamic (c) = !("rec" in c) || (c.rec == "none"),
+  local dynamic (confApp, c) = (!("rec" in c) || (c.rec == "none")) && (!("allowDynamicSources" in confApp) || confApp.allowDynamicSources),
 
   local camOrigMeta (cid, confApp, c) =
     local meta = metaNameDesc(c);
@@ -19,7 +19,7 @@
         meta: meta,
       },
       meta: meta,
-      dynamic: dynamic(self.__orig),
+      dynamic: dynamic(confApp, self.__orig),
     },
 
   
@@ -36,14 +36,18 @@
         meta: meta,
       } + (if "proc" in ss then { proc: ss.proc } else { proc: null }),
       meta: meta,
-      dynamic: dynamic(self.__orig)
+      dynamic: dynamic(confApp, self.__orig)
     },
 
   local substreams (c) = if "substreams" in c then c["substreams"] else [],
   
   make_app (cid, appDef): {
     local onvifSet = if "onvif" in appDef then appDef.onvif else [],
+
     local rtspSet = if "rtsp" in appDef then appDef.rtsp else [],
+
+    camOrigMeta: camOrigMeta,
+    camOrigMetaSub: camOrigMetaSub,
 
     local mk_onvif_substreams(c) =
       [common.mk_onvif(common.mk_cam_name_sub(cid, confApp, c.id, ss.suffix),
@@ -55,8 +59,8 @@
        for ss in substreams(c)],
     local mk_rtsp_substreams(c) =
       [common.mk_rtsp(common.mk_cam_name_sub(cid, confApp, c.id, ss.suffix),
-                      ss.url)
-       + (if "cred" in c then {auth: appDef.creds[c.cred]} else {})
+                      ss.url,
+                      if "cred" in c then appDef.creds[c.cred] else null)
        + { enable: ['video', 'audio'] }
        + camOrigMetaSub(cid, confApp, c, ss)
        for ss in substreams(c)],
@@ -68,8 +72,9 @@
                                           if "profile" in c then c.profile else null) + camOrigMeta(cid, confApp, c),
               onvifSet),
     local srcRtsp =
-      std.map(function(c) common.mk_rtsp(common.mk_cam_name(cid, confApp, c.id), c.url) +
-              (if "cred" in c then {auth: appDef.creds[c.cred]} else {}) + camOrigMeta(cid, confApp, c),
+      std.map(function(c) common.mk_rtsp(common.mk_cam_name(cid, confApp, c.id), c.url,
+                                         if "cred" in c then appDef.creds[c.cred] else null)
+              + camOrigMeta(cid, confApp, c),
               rtspSet),
     local srcRtspSubstreams = std.flattenArrays(std.map(mk_rtsp_substreams, rtspSet)),
     local srcOnvifSubstreams = std.flattenArrays(std.map(mk_onvif_substreams, onvifSet)),
@@ -88,6 +93,7 @@
       repl: null,
 
       preserveSourceIds: false,
+      allowDynamicSources: true,
     },
 
     local confApp = self.appDefault + if "app" in appDef then appDef.app else {},
@@ -99,6 +105,9 @@
     metrics: confApp.metrics,
     events: confApp.events,
     repl: confApp.repl,
+    // construct media source ids as "cam_CLUSTER_CAMID" or preserve just "CAMID"
     preserveSourceIds: confApp.preserveSourceIds,
+    // global switch to disable dynamic sources
+    allowDynamicSources: confApp.allowDynamicSources,
   }
 }

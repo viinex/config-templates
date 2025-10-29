@@ -1,0 +1,12 @@
+app:
+  type: conntourPoc
+
+cameras:
+  - uuid: c3b1a8a4-91d2-11ee-b9d1-0242ac120002
+    uri: rtsp://192.168.1.100:554/stream1
+    username: admin
+    password: securepass123
+  - uuid: d7e4b6b8-91d2-11ee-b9d1-0242ac120002
+    uri: rtsp://192.168.1.101:554/stream1
+    username: viewer
+    password: viewonly

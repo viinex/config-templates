@@ -57,12 +57,12 @@ local common = {
     else "cam_" + clusterId + "_" + camId,
   mk_cam_name_sub: function (clusterId, app, camId, suffix) common.mk_cam_name(clusterId, app, camId) + "_" + suffix,
   
-  mk_rtsp: function (name, url) {
+  mk_rtsp: function (name, url, auth) {
     type: "rtsp",
     name: name,
     local urlparsed = parseRtspUrl(url),
     url: urlparsed.url,
-    auth: urlparsed.auth,
+    auth: if auth != null then auth else urlparsed.auth,
     rtpstats: true,
     transport: ["tcp"]
   },
