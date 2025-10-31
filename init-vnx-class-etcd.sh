@@ -48,7 +48,6 @@ if ! test -z `etcdctl get "$ETCDPREFIX/config/$TENANT/$PROJECT/recipe.yaml" --ke
     exit 1
 fi
 
-echo "main: $MAIN_JSONNET" | etcdctl put "$ETCDPREFIX/config/$TENANT/$PROJECT/recipe.yaml"
 cat <<EOF | etcdctl put "$ETCDPREFIX/config/$TENANT/$PROJECT/mapping.yaml"
 type: static
 
@@ -63,3 +62,7 @@ echo -n "$PUBKEY" | etcdctl put "$ETCDPREFIX/config/$TENANT/$PROJECT/wamp/$AUTHI
 
 # upload templates
 make etcdupload
+
+# upload recipe.yaml in last place to make sure everything else is ready when vnx-class
+# realizes that there's a new realm
+echo "main: $MAIN_JSONNET" | etcdctl put "$ETCDPREFIX/config/$TENANT/$PROJECT/recipe.yaml"
