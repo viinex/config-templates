@@ -16,10 +16,10 @@ else
 endif
 
 $(JSONS): %.json: %.yaml $(JSONNETS)
-	jsonnet --ext-str CID=${CID} --ext-str-file confYaml=$< main.jsonnet --ext-str OSName=${OSName} -o $@
+	jsonnet --ext-str CID=${CID} --ext-str-file confYaml=$< main.jsonnet --ext-str OSName=${OSName} --ext-str deploy=systemd -o $@
 
 etcdclean:
-	etcdctl del ${ETCDPREFIX}/templates --prefix $(ETCDAUTH)
+	etcdctl del ${ETCD_PREFIX}/templates --prefix $(ETCDAUTH)
 
 etcdupload:
-	for i in ${JSONNETS}; do etcdctl put ${ETCDPREFIX}/templates/jsonnet/$${i} $(ETCDAUTH) < $${i}; done
+	for i in ${JSONNETS}; do etcdctl put ${ETCD_PREFIX}/templates/jsonnet/$${i} $(ETCDAUTH) < $${i}; done

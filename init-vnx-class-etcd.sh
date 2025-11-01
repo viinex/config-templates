@@ -7,21 +7,22 @@ TENANT="$2"
 PROJECT="$3"
 PUBKEY="$4"
 
-# uncomment or comment this out
-export ETCDPREFIX="/viinex"
 
 AUTHID=vnxworker
 
 case "$FLAVOR" in
     nvr)
         export MAIN_JSONNET=main.jsonnet
-        export SAMPLE_YAML=sample-home.yaml
+        export SAMPLE_YAML=sample-nvr.yaml
         export DEPLOY_TYPE=systemd
         ;;
     conntour)
         export MAIN_JSONNET=main-conntour.jsonnet
         export SAMPLE_YAML=sample-conntour-poc.yaml
         export DEPLOY_TYPE=docker
+        # uncomment or comment this out.
+        # this should match the setting of vnx-class service
+        export ETCD_PREFIX="/viinex"
         ;;
     *)
         echo "Unrecognized flavor"
@@ -62,29 +63,29 @@ EOF
 fi
 
 
-if ! test -z `etcdctl get "$ETCDPREFIX/config/$TENANT/$PROJECT/recipe.yaml" --keys-only` ; then
+if ! test -z `etcdctl get "$ETCD_PREFIX/config/$TENANT/$PROJECT/recipe.yaml" --keys-only` ; then
     echo "recipe.yaml is already present. Refusing to proceed."
     exit 1
 fi
 
-cat <<EOF | etcdctl put "$ETCDPREFIX/config/$TENANT/$PROJECT/mapping.yaml"
+cat <<EOF | etcdctl put "$ETCD_PREFIX/config/$TENANT/$PROJECT/mapping.yaml"
 type: static
 
 cluster-to-instance:
   demo01: vnxworker01
 EOF
 
-cat $SAMPLE_YAML | etcdctl put "$ETCDPREFIX/config/$TENANT/$PROJECT/clusters/demo01.yaml"
+cat $SAMPLE_YAML | etcdctl put "$ETCD_PREFIX/config/$TENANT/$PROJECT/clusters/demo01.yaml"
 
-echo -n viinex | etcdctl put "$ETCDPREFIX/config/$TENANT/$PROJECT/wamp/$AUTHID/role"
-echo -n "$PUBKEY" | etcdctl put "$ETCDPREFIX/config/$TENANT/$PROJECT/wamp/$AUTHID/cryptosign"
+echo -n viinex | etcdctl put "$ETCD_PREFIX/config/$TENANT/$PROJECT/wamp/$AUTHID/role"
+echo -n "$PUBKEY" | etcdctl put "$ETCD_PREFIX/config/$TENANT/$PROJECT/wamp/$AUTHID/cryptosign"
 
 # upload templates
 make etcdupload
 
 # upload recipe.yaml in last place to make sure everything else is ready when vnx-class
 # realizes that there's a new realm
-cat <<EOF | etcdctl put "$ETCDPREFIX/config/$TENANT/$PROJECT/recipe.yaml"
+cat <<EOF | etcdctl put "$ETCD_PREFIX/config/$TENANT/$PROJECT/recipe.yaml"
 main: $MAIN_JSONNET
 
 ext-str:
