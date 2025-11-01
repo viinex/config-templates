@@ -9,7 +9,11 @@ local constants = {
 
   storageRoot: if constants.isWindows then "c:/viinexvideo" else "/vnxdata",
 
-  rtspsrvPort: 554,
+  docker: std.extVar('deploy')=='docker',
+  
+  rtspsrvPort: if self.docker then "$(env@json.RTSP_PORT)" else 554,
+  webserverPort: if self.docker then "$(env@json.HTTP_PORT)" else 8880,
+  
 };
 
 constants

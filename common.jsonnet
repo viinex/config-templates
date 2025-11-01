@@ -119,7 +119,7 @@ local common = {
   mk_webserver: function (name) {
     type: "webserver",
     name: "web_" + name,
-    port: 8880,
+    port: constants.webserverPort,
     staticpath: if constants.isWindows then "c:/Program Files/Viinex/share/web" else "/usr/share/viinex/web/browser/en",
     "rem tls":{
       key: constants.tls.key,

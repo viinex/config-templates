@@ -5,7 +5,7 @@ creds:
 
 onvif:
   - addr: "192.168.0.128"
-    id: fy
+    id: fyard
     name: Front yard
     desc: Front yard and street overview
     location: 49.84406997764904, 24.02648398409157
@@ -19,8 +19,6 @@ onvif:
     id: attic
     name: Attic
     rec: none
-    proc:
-      - alpr-vit
   - addr: '192.168.0.111'
     id: porch
     name: Porch
@@ -42,22 +40,9 @@ rtsp:
       - url: rtsp://192.168.32.121/Streaming/Channels/102
         suffix: main
         rec: permanent
-        proc: [alpr-vit]
       - url: rtsp://192.168.32.121/Streaming/Channels/102
         suffix: sub
         rec: none
 
 app:
-  type: alprBox
-  metrics: true
-  rtspsrv: true
-  webrtc: true
-  wamp: false
-  websrv: true
-  repl:
-    sink: http://localhost:8881/v1/svc/replsink1
-    auth: ["agentA", "foobarsecret42"]
-  dnnDevices: cpu
-  alprSettings: kz
-  rtmsEndpoint: http://localhost:8882/nonexistent
-  preserveSourceIds: true
+  type: nvr
