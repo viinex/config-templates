@@ -46,6 +46,21 @@
 
     local rtspSet = if "rtsp" in appDef then appDef.rtsp else [],
 
+    local stripPathExt(p) =
+      local s = std.split(p, '/');
+      local basename = s[std.length(s)-1];
+      local e = std.split(basename, '.');
+      local res = std.join('.', e[:-1]);
+      res,
+
+    local mediafileSet = if "mediafile" in appDef then
+                           std.map(function(p)
+                               local res = {
+                                 id: stripPathExt(p),
+                                 path: p,
+                               }; res,
+                                  appDef.mediafile) else [],
+
     camOrigMeta: camOrigMeta,
     camOrigMetaSub: camOrigMetaSub,
 
@@ -76,9 +91,12 @@
                                          if "cred" in c then appDef.creds[c.cred] else null)
               + camOrigMeta(cid, confApp, c),
               rtspSet),
+    local srcMediafiles =
+      std.map(function(c) local r = common.mk_mediafile(common.mk_cam_name(cid, confApp, c.id), c.path);
+              r + camOrigMeta(cid, confApp, c) + {dynamic: false}, mediafileSet),
     local srcRtspSubstreams = std.flattenArrays(std.map(mk_rtsp_substreams, rtspSet)),
     local srcOnvifSubstreams = std.flattenArrays(std.map(mk_onvif_substreams, onvifSet)),
-    sources: srcOnvif + srcRtsp + srcOnvifSubstreams + srcRtspSubstreams,
+    sources: srcOnvif + srcRtsp + srcOnvifSubstreams + srcRtspSubstreams + srcMediafiles,
     local recPermanent = std.filter(function (s) "rec" in s.__orig && s.__orig.rec == "permanent", self.sources),
     local recMotion = std.filter(function (s) "rec" in s.__orig && s.__orig.rec == "motion", self.sources),
     record: if std.all(std.map(function(s) s.__orig.rec == "none", self.sources)) then null else { motion: recMotion, permanent: recPermanent },

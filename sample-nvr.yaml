@@ -44,5 +44,9 @@ rtsp:
         suffix: sub
         rec: none
 
+mediafile:
+  - /home/gzh/video/jellyfin.mp4
+  - /home/gzh/h265/GangnamStyle-480p.mp4
+
 app:
   type: nvr
