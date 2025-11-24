@@ -13,6 +13,9 @@
         metrics: true,
         events: null,
         repl: null,
+        zmq: {
+          scheme: "savant",
+        },
 
         preserveSourceIds: true,
         allowDynamicSources: false

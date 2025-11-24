@@ -145,6 +145,14 @@ local common = {
     port: port
   },
 
+  mk_zmq_exporter: function (name, scheme, behavior, endpoint) {
+    type: "zmq.export",
+    name: "zmq_export_" + name,
+    scheme: scheme,
+    socket_behavior: if behavior == null then "bind" else behavior,
+    zmq_endpoint: if endpoint == null then "$(env.ZMQ_ENDPOINT)" else endpoint,
+  },
+
   mk_metrics: function (cid) {
     type: "metrics",
     name: "metrics",
@@ -249,17 +257,31 @@ local common = {
                       then [common.mk_db_sqlite(cid+"_1")]
                       else [],
     local wamps = if app.wamp then [common.mk_wamp_client(cid, cid + "_0")] else [],
+    local zmq = if app.zmq != null
+                then [common.mk_zmq_exporter(cid+"_0",
+                                             if "scheme" in app.zmq
+                                             then app.zmq.scheme
+                                             else "viinex",
+                                             if "behavior" in app.zmq
+                                             then app.zmq.behavior
+                                             else null,
+                                             if "endpoint" in app.zmq
+                                             then app.zmq.endpoint
+                                             else null)]
+                else [],
     local publishers = webrtcs + rtspsrvs + websrvs + wamps,
     local mediaPublishers = webrtcs + rtspsrvs + websrvs,
+    local mediaPublishersLive = zmq,
     local apiPublishers = websrvs + wamps,
     local apiProviders = mediaSources + storages + webrtcs + metrics + databases,
-    local metricsProviders = mediaSources + storages + procRenderers + databases + webrtcs + rtspsrvs + websrvs,
+    local metricsProviders = mediaSources + storages + procRenderers + databases + webrtcs + rtspsrvs + websrvs + zmq,
     local eventProducers = mediaSourcesMain + storages + procWorkers + procHandlers,
     
-    objects: mediaSources + storages + publishers + metrics + recctls + replsrcs + rules + databases +
+    objects: mediaSources + storages + publishers + metrics +
+             recctls + replsrcs + rules + databases + zmq +
              procRenderers + procWorkers + procHandlers,
     links: [
-      [common.namesOf(mediaSources), common.namesOf(mediaPublishers)],
+      [common.namesOf(mediaSources), common.namesOf(mediaPublishers) + common.namesOf(mediaPublishersLive)],
       [common.namesOf(mediaPublishers), common.namesOf(storages)],
       [common.namesOf(apiPublishers), common.namesOf(apiProviders)],
       [common.namesOf(metrics), common.namesOf(metricsProviders)],

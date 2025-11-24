@@ -109,6 +109,7 @@
       metrics: true,
       events: "sqlite",
       repl: null,
+      zmq: null,
 
       preserveSourceIds: false,
       allowDynamicSources: true,
@@ -123,6 +124,7 @@
     metrics: confApp.metrics,
     events: confApp.events,
     repl: confApp.repl,
+    zmq: confApp.zmq,
     // construct media source ids as "cam_CLUSTER_CAMID" or preserve just "CAMID"
     preserveSourceIds: confApp.preserveSourceIds,
     // global switch to disable dynamic sources
