@@ -15,6 +15,7 @@
         repl: null,
         zmq: {
           scheme: "savant",
+          behavior: "$(env.ZMQ_SOCKET_BEHAVIOR)"
         },
 
         preserveSourceIds: true,
