@@ -14,7 +14,10 @@
         events: null,
         repl: null,
         zmq: {
-          scheme: "savant",
+          scheme: { 
+            type: "savant", 
+            version: "1.10.1",
+          },
           behavior: "$(env.ZMQ_SOCKET_BEHAVIOR)"
         },
 
