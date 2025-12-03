@@ -12,3 +12,5 @@ cameras:
 # and `recipe.yaml` specifies `main: main-conntour.jsonnet`
 app:
   type: conntourPoc
+  recordRetainDaysMax: 14
+

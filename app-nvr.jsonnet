@@ -113,6 +113,7 @@
 
       preserveSourceIds: false,
       allowDynamicSources: true,
+      recordRetainDaysMax: null,
     },
 
     local confApp = self.appDefault + if "app" in appDef then appDef.app else {},
@@ -129,5 +130,7 @@
     preserveSourceIds: confApp.preserveSourceIds,
     // global switch to disable dynamic sources
     allowDynamicSources: confApp.allowDynamicSources,
+    recordRetainDaysMax: confApp.recordRetainDaysMax,
   }
+
 }

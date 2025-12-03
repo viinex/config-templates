@@ -22,7 +22,8 @@
         },
 
         preserveSourceIds: true,
-        allowDynamicSources: false
+        allowDynamicSources: false,
+        recordRetainDaysMax: 7,
       },
       sources: srcRtsp,
       record: { motion: [], permanent: srcRtsp },

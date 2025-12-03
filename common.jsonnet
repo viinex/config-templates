@@ -129,14 +129,16 @@ local common = {
     clusters: true,
   },
 
-  mk_storage: function (name) {
+  mk_storage: function (name, app) {
     type: "storage",
     name: "stor_" + name,
     folder: constants.storageRoot + "/" + self.name,
     filesize: 4,
     limits: {
       keep_free_percents: 20
-    }
+    } + if "recordRetainDaysMax" in app && app.recordRetainDaysMax != null
+        then { max_depth_abs_hours: app.recordRetainDaysMax * 24 }
+        else {}
   },
 
   mk_rtspsrv: function (name, port) {
@@ -208,7 +210,7 @@ local common = {
   build_viinex_config: function (cid, app) {
     local mediaSources = app.sources,
     local mediaSourcesMain = std.filter(function (s) s.__orig.substreamOf == null, mediaSources),
-    local storages = if app.record != null then [common.mk_storage(cid+"_1")] else [],
+    local storages = if app.record != null then [common.mk_storage(cid+"_1", app)] else [],
     local replsrcs = if app.repl != null && app.record != null then [common.mk_replsrc(cid+"_1", app.repl.sink, app.repl.auth)] else [],
     local recctls = if app.record != null then [common.mk_recctl(cid, s.__orig.id, 5, 5) for s in app.record.motion] else [],
     local rules = if app.record != null then [common.mk_rule_motion(cid, s.__orig.id) for s in app.record.motion] else [],
