@@ -1,0 +1,14 @@
+acsEndpointUri: http://sensitive-endpoint
+acsEndpointLogin: sensitive-login
+acsEndpointPassword: sensitive-password
+
+modbusAddress: "192.168.1.1"
+cam1Address: "192.168.1.2"
+cam2Address: "192.168.1.3"
+camLogin: "admin"
+camPassword: "12345"
+
+turnAddress: "servers-coturn-address:3478"
+turnAddressClient: "clients-coturn-address:3478"
+turnLogin: sensitive-login
+turnPassword: sensitive-password
