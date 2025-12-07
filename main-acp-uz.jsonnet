@@ -1,7 +1,8 @@
 {
-  local conf = std.parseYaml(std.extVar('confYaml')),
-  local def = std.parseYaml(std.extVar('def')),
-  local cid = std.format("a%s", conf.acpAreaId),
+  local confYaml = std.parseYaml(std.extVar('confYaml')),
+  local defaultsYaml = std.parseYaml(std.extVar('def')),
+  local conf = confYaml + defaultsYaml,
+  local cid = std.extVar('CID'),
   
   local names = {
     modbus: "modbus_" + cid,
@@ -24,7 +25,7 @@
     {
       "type": "modbus",
       "name": names.modbus,
-      "host": def.modbusAddress,
+      "host": conf.modbusAddress,
       "unit_id": 1,
       "rem period": 1000,
       "rem device": "/dev/ttyUSB0",
@@ -41,16 +42,16 @@
     {
       "type": "rtsp",
       "name": names.cam1,
-      "host": def.cam1Address,
-      "auth": [def.camLogin, def.camPassword],
+      "host": conf.cam1Address,
+      "auth": [conf.camLogin, conf.camPassword],
       "enable": ["video"],
       "transport": ["tcp"]
     },
     {
       "type": "rtsp",
       "name": names.cam2,
-      "host": def.cam2Address,
-      "auth": [def.camLogin, def.camPassword],
+      "host": conf.cam2Address,
+      "auth": [conf.camLogin, conf.camPassword],
       "enable": ["video"],
       "transport": ["tcp"]
     },
@@ -207,8 +208,8 @@
           }                    
         ],
         "acs": {
-          "endpoint": def.acsEndpointUri,
-          "auth": [def.acsEndpointLogin, def.acsEndpointPassword],
+          "endpoint": conf.acsEndpointUri,
+          "auth": [conf.acsEndpointLogin, conf.acsEndpointPassword],
           "area_id": conf.acpAreaId,
           "num_retries": 3,
           "ignore_result": false
@@ -294,23 +295,23 @@
       "stunsrv": 3478,
       "ice_servers": [
         {
-          "urls": "stun:" + def.turnAddress
+          "urls": "stun:" + conf.turnAddress
         },
         {
-          "urls": "turn:"  + def.turnAddress,
-          "username": def.turnLogin,
-          "credential": def.turnPassword
+          "urls": "turn:"  + conf.turnAddress,
+          "username": conf.turnLogin,
+          "credential": conf.turnPassword
         }
       ],
       "meta": {
         "ice_servers": [
           {
-            "urls": "stun:" + def.turnAddressClient
+            "urls": "stun:" + conf.turnAddressClient
           },
           {
-            "urls": "turn:"  + def.turnAddressClient,
-            "username": def.turnLogin,
-            "credential": def.turnPassword
+            "urls": "turn:"  + conf.turnAddressClient,
+            "username": conf.turnLogin,
+            "credential": conf.turnPassword
           }
         ],
         "stunsrv": 3478
