@@ -58,7 +58,7 @@
                                local res = {
                                  id: stripPathExt(p),
                                  path: p,
-                               }; res,
+                               }; if std.type(p) == "string" then res else p,
                                   appDef.mediafile) else [],
 
     camOrigMeta: camOrigMeta,

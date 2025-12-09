@@ -45,8 +45,13 @@ rtsp:
         rec: none
 
 mediafile:
-  - /home/gzh/video/jellyfin.mp4
-  - /home/gzh/h265/GangnamStyle-480p.mp4
+  - path: /etc/viinex.conf.d/GangnamStyle-480p-h264-opus.mp4
+    id: "52"
+    name: Gangnam Style - AVC
+  - path: /etc/viinex.conf.d/GangnamStyle-480p-h265-opus.mp4
+    id: "53"
+    name: Gangnam Style - HEVC
+  - /etc/viinex.conf.d/jellyfin.mp4
 
 app:
   type: nvr
