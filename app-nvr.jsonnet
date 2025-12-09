@@ -67,7 +67,9 @@
     local mk_onvif_substreams(c) =
       [common.mk_onvif(common.mk_cam_name_sub(cid, confApp, c.id, ss.suffix),
                        c.addr,
-                       appDef.creds[if "cred" in c then c["cred"] else 0],
+                       if "auth" in c
+                       then c.auth
+                       else appDef.creds[if "cred" in c then c["cred"] else 0],
                        ss.profile)
        + { enable: ['video', 'audio'] }
        + camOrigMetaSub(cid, confApp, c, ss)
@@ -83,12 +85,16 @@
     local srcOnvif =
       std.map(function(c) common.mk_onvif(common.mk_cam_name(cid, confApp, c.id),
                                           c.addr,
-                                          appDef.creds[if "cred" in c then c["cred"] else 0],
+                                          if "auth" in c
+                                          then c.auth
+                                          else appDef.creds[if "cred" in c then c["cred"] else 0],
                                           if "profile" in c then c.profile else null) + camOrigMeta(cid, confApp, c),
               onvifSet),
     local srcRtsp =
       std.map(function(c) common.mk_rtsp(common.mk_cam_name(cid, confApp, c.id), c.url,
-                                         if "cred" in c then appDef.creds[c.cred] else null)
+                                         if "auth" in c
+                                         then c.auth
+                                         else if "cred" in c then appDef.creds[c.cred] else null)
               + camOrigMeta(cid, confApp, c),
               rtspSet),
     local srcMediafiles =
