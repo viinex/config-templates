@@ -13,7 +13,10 @@ local constants = {
   
   rtspsrvPort: if self.docker then "$(env@json.RTSP_PORT)" else 554,
   webserverPort: if self.docker then "$(env@json.HTTP_PORT)" else 8880,
-  
+
+  refDeployParam(name): if self.docker
+                        then "$(env." + name + ")"
+                        else "$(var." + name + ")",
 };
 
 constants

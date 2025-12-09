@@ -152,7 +152,7 @@ local common = {
     name: "zmq_export_" + name,
     scheme: scheme,
     socket_behavior: if behavior == null then "bind" else behavior,
-    zmq_endpoint: if endpoint == null then "$(env.ZMQ_ENDPOINT)" else endpoint,
+    zmq_endpoint: if endpoint == null then constants.refDeployParam("ZMQ_ENDPOINT") else endpoint,
   },
 
   mk_metrics: function (cid) {
@@ -183,13 +183,13 @@ local common = {
   mk_wamp_client: function (clusterId, name) {
     type: "wamp",
     name: "wamp_" + name,
-    realm: "$(env.REALM)",
+    realm: constants.refDeployParam("REALM"),
     auth: {
       method: "cryptosign",
-      role: "$(env.AUTHID)",
-      secret: "$(env.PRIVATE_KEY)"
+      role: constants.refDeployParam("AUTHID"),
+      secret: constants.refDeployParam("PRIVATE_KEY"),
     },
-    url: "$(env.URL)",
+    url: constants.refDeployParam("URL"),
     app: "com.viinex.api",
     prefix: clusterId,
     clusters: false
