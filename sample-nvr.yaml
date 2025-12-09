@@ -29,6 +29,9 @@ onvif:
       - profile: Profile_2
         suffix: sub
         rec: motion
+  - addr: http://192.168.32.101:2020/onvif/device_service
+    id: "8"
+    auth: ['administrator', '12345']
 
 rtsp:
   - url: rtsp://admin:12345@192.168.32.121

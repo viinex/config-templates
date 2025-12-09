@@ -70,13 +70,14 @@ local common = {
   mk_onvif: function (name, addr, auth, profile) {
     type: "onvif",
     name: name,
-    host: addr,
     auth: auth,
     profile: profile,
     enable: ["video", "audio", "events", "ptz"],
     rtpstats: true,
     transport: ["udp"],
-  },
+  } + if std.startsWith(addr, "http://") || std.startsWith(addr, "https://")
+      then { url: addr }
+      else { host: addr },
 
   mk_recctl: function(cid, name, prerecord, postrecord) {
     type: "recctl",
