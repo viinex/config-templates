@@ -20,6 +20,20 @@
           },
           behavior: "$(env.ZMQ_SOCKET_BEHAVIOR)"
         },
+        auth: {
+          // "root" account with api key for debugging
+          local authHasRoot = "root" in confApp && std.isString(confApp.root),
+          secret: "$(env.AUTH_SECRET)",
+          realm: "conntour",
+          accounts: if authHasRoot
+                    then [{
+                      type: "apikey",
+                      key: "root",
+                      secret: confApp.root,
+                    }] else [],
+          roles: std.map(function(c) [[], c.uuid], appDef.cameras) + if authHasRoot then [["root", "root"]] else [],
+          acl: std.map(function(c) [c.uuid, c.uuid, null], appDef.cameras) + if authHasRoot then [["root", null, null]] else [],
+        },
 
         preserveSourceIds: true,
         allowDynamicSources: false,

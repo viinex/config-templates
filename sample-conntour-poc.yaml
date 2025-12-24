@@ -13,4 +13,5 @@ cameras:
 app:
   type: conntourPoc
   recordRetainDaysMax: 14
-
+  root: "12345" # specify this to enable "root" account or comment out to disable
+  # auth: null # specify this to turn off authentication

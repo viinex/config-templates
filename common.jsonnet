@@ -196,6 +196,16 @@ local common = {
     clusters: false
   },
 
+  mk_authnz_static: function (name, cfg) {
+    type: "authnz",
+    name: "authnz_" + name,
+    realm: cfg.realm,
+    secret: cfg.secret,
+    accounts: cfg.accounts,
+    roles: cfg.roles,
+    acl: cfg.acl,
+  },
+
   namesOf: function (objects) std.map(function(x) x.name, objects),
 
   default_app: function () {
@@ -260,6 +270,9 @@ local common = {
                       then [common.mk_db_sqlite(cid+"_1")]
                       else [],
     local wamps = if app.wamp then [common.mk_wamp_client(cid, cid + "_0")] else [],
+    local authnz = if app.auth != null && !("acl_id" in app.auth)
+                   then [common.mk_authnz_static(cid + "_0", app.auth)]
+                   else [],
     local zmq = if app.zmq != null
                 then [common.mk_zmq_exporter(cid+"_0",
                                              if "scheme" in app.zmq
@@ -282,7 +295,7 @@ local common = {
     
     objects: mediaSources + storages + publishers + metrics +
              recctls + replsrcs + rules + databases + zmq +
-             procRenderers + procWorkers + procHandlers,
+             procRenderers + procWorkers + procHandlers + authnz,
     links: [
       [common.namesOf(mediaSources), common.namesOf(mediaPublishers) + common.namesOf(mediaPublishersLive)],
       [common.namesOf(mediaPublishers), common.namesOf(storages)],
@@ -290,6 +303,7 @@ local common = {
       [common.namesOf(metrics), common.namesOf(metricsProviders)],
       [common.namesOf(recctls), common.namesOf(storages)],
       [common.namesOf(databases), common.namesOf(eventProducers)],
+      [common.namesOf(publishers), common.namesOf(authnz)],
     ] + linksRecctlRule + linksRecPermanent + linksStoragesReplsrcs + linksProcRenderers + linksProc + linksProcHandlers
   },
 
