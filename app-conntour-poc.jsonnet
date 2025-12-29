@@ -32,7 +32,12 @@
                       secret: confApp.root,
                     }] else [],
           roles: std.map(function(c) [[], c.uuid], appDef.cameras) + if authHasRoot then [["root", "root"]] else [],
-          acl: std.flattenArrays(std.map(function(c) [[c.uuid, c.uuid, null], [c.uuid, null, "MetaConfigStorage"]], appDef.cameras)) +
+          acl: std.flattenArrays(std.map(function(c) [
+            [c.uuid, c.uuid, null],
+            [c.uuid, null, ["MetaConfigStorage",
+                            "WebRTC",
+                            "VideoStorage"]],
+          ], appDef.cameras)) +
                if authHasRoot then [["root", null, null]] else [],
         },
 
